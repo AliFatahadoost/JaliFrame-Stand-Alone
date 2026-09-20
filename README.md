@@ -4,9 +4,9 @@
 
 Jali Frame turns database-backed application structure into declarations.
 
-Instead of building controllers, services, repositories, DTOs, mappers, route handlers, and a separate frontend for every CRUD screen, you define your application through a small set of enums and use Jali's Web Components to render it.
+Instead of building controllers, services, repositories, DTOs, mappers, and a separate frontend for every CRUD screen, you define your application through a small set of enums and use Jali's Web Components to render it.
 
-**No Spring. No ORM. No React. No build step.**
+**No Spring. No ORM. No React. No frontend build step.**
 
 Just Java, SQL Server, HTML, CSS, JavaScript, and a framework built around them.
 
@@ -16,9 +16,15 @@ Just Java, SQL Server, HTML, CSS, JavaScript, and a framework built around them.
 
 ---
 
-## What does Jali Frame actually do?
+## What is Jali Frame?
 
-A single `CrudQueriesEnum` entry can define a table's CRUD behavior and permission boundary:
+Jali Frame is a convention-driven full-stack Java framework for building database-backed web applications.
+
+The framework's central idea is simple:
+
+> **Application structure should be declared, not repeatedly implemented.**
+
+A single `CrudQueriesEnum` entry can describe a database object's CRUD operations and permission boundary:
 
 ```java
 Warehouse(
@@ -60,7 +66,7 @@ Warehouse(
 )
 ```
 
-Then expose it with a single Web Component:
+Then expose it in HTML:
 
 ```html
 <fetch-data-table
@@ -73,7 +79,7 @@ Then expose it with a single Web Component:
 </fetch-data-table>
 ```
 
-That gives you a working CRUD surface with:
+That is enough to create a working CRUD interface with:
 
 * Search
 * Pagination
@@ -85,20 +91,18 @@ That gives you a working CRUD surface with:
 * Modal forms
 * Interactive map input
 * Authentication
-* Object-level authorization
+* Authorization
 * JSON API handling
 
-The application code describes **what exists**.
+You describe the application.
 
-Jali Frame handles **how it works**.
+Jali Frame handles the plumbing.
 
 ---
 
 # Why Jali Frame?
 
-Traditional Java web stacks are powerful, but for internal business software they can introduce a lot of machinery before the first useful screen exists.
-
-A simple database table can turn into:
+Traditional Java web applications often turn a simple database-backed screen into a chain of abstractions:
 
 ```text
 Controller
@@ -113,14 +117,14 @@ DTO
     ↓
 Mapper
     ↓
-REST Endpoint
+REST API
     ↓
-Frontend API Layer
+Frontend API layer
     ↓
-Frontend Component
+Frontend component
 ```
 
-Jali Frame takes a different approach.
+Jali Frame takes a different approach:
 
 ```text
 Database
@@ -129,30 +133,32 @@ CrudQueriesEnum
     ↓
 Generic API
     ↓
-<fetch-data-table>
+Web Component
 ```
-
-Application structure is treated as **declarative data** rather than repetitive application code.
 
 A new CRUD page is intentionally small:
 
-1. Define its queries.
-2. Assign an object code.
-3. Register the page.
-4. Add a `<fetch-data-table>`.
+```text
+CrudQueriesEnum
+WebPagesEnum
+FilesEnum
+HTML
+```
 
-The framework handles the repetitive plumbing.
+The framework handles the repetitive work around them.
 
-Jali Frame is deliberately opinionated. It is not trying to replace every Java web stack.
+Jali Frame is deliberately opinionated.
 
-It is designed for applications where:
+It does not attempt to be a universal replacement for every Java web stack. It is designed for applications where SQL-backed business data and CRUD interfaces are the core of the system.
 
-* SQL Server is the database.
-* CRUD operations are a major part of the application.
-* You want server-side Java without a large framework stack.
-* You want a browser UI without React or another frontend framework.
-* You want a small, understandable codebase.
-* You care about shipping internal business software quickly.
+Typical examples include:
+
+* ERP modules
+* Inventory systems
+* Internal management software
+* Administrative panels
+* Database-first applications
+* CRUD-heavy enterprise tools
 
 ---
 
@@ -170,61 +176,61 @@ For example:
 103 = Employees
 ```
 
-The same code becomes the permission boundary throughout the application.
+The same object code is used throughout the framework:
 
-It is used in:
-
-```java
+```text
 WebPagesEnum
 CrudQueriesEnum
+HTML
 ```
 
-and in HTML:
+For example:
 
 ```html
-<div data-AccessCode="101">
+<div
+    class="menu-item"
+    data-AccessCode="101"
+    data-route="/warehouse">
     Warehouse Management
 </div>
 ```
 
-One object code represents one authorization boundary.
+The number becomes the permission boundary for that object.
 
-That means the framework can connect:
+One code connects:
 
 ```text
 Page
-  ↓
+ ↓
 API
-  ↓
+ ↓
 SQL
-  ↓
+ ↓
 Permissions
 ```
-
-without requiring a separate role/controller/permission system for every screen.
 
 ---
 
 ## 2. Enums Declare the Application
 
-Jali Frame uses a small number of enums to describe the application.
+Jali Frame uses a small set of enums to describe the application's structure.
 
-| Enum              | Purpose                               |
-| ----------------- | ------------------------------------- |
-| `FileTypesEnum`   | MIME types                            |
-| `FilesEnum`       | Static files and HTML pages           |
-| `WebPagesEnum`    | Routes, pages, object codes           |
-| `CrudQueriesEnum` | SQL operations and permission binding |
+| Enum              | Purpose                             |
+| ----------------- | ----------------------------------- |
+| `FileTypesEnum`   | MIME types                          |
+| `FilesEnum`       | Static files and HTML pages         |
+| `WebPagesEnum`    | Routes, pages, object codes         |
+| `CrudQueriesEnum` | CRUD queries and permission binding |
 
-Instead of scattering application metadata throughout annotations, controllers, and configuration files, Jali keeps the application's structure explicit.
+Instead of spreading application metadata across controllers, annotations, repositories, and configuration classes, Jali keeps it explicit.
 
 ---
 
 ## 3. Generic CRUD APIs
 
-Jali Frame can generate CRUD HTTP handlers from a `CrudQueriesEnum` entry.
+Jali Frame generates generic HTTP CRUD handlers around `CrudQueriesEnum`.
 
-The generic API handles:
+The API layer handles:
 
 ```text
 GET
@@ -239,12 +245,13 @@ along with:
 * Permission checks
 * URL parameter parsing
 * JSON body parsing
-* SQL parameter binding
+* Parameter binding
+* SQL execution
 * Result serialization
 
-The goal is not to hide SQL.
+Jali does not try to hide the database.
 
-The goal is to remove the repetitive HTTP plumbing around it.
+It removes the repetitive HTTP plumbing around database operations.
 
 ---
 
@@ -260,13 +267,13 @@ Create and update requests currently use positional fields:
 }
 ```
 
-The order is determined by:
+The order comes from:
 
 ```java
 .setColumnNames(...)
 ```
 
-Therefore:
+For example:
 
 ```java
 .setColumnNames(
@@ -276,15 +283,17 @@ Therefore:
 )
 ```
 
-must correspond to the order of the HTML inputs.
+must correspond to the HTML input order.
 
-This is intentionally simple, but it is also one of Jali Frame's biggest current limitations.
-
-Named payloads are planned.
+Named payloads are planned for a future release.
 
 ---
 
 # Quick Start
+
+Jali Frame is designed so the first startup does **not** require manually creating `config.txt`.
+
+The launcher handles configuration for you.
 
 ## Requirements
 
@@ -292,22 +301,116 @@ Named payloads are planned.
 * SQL Server 2019+
 * A modern web browser
 
-Jali Frame does not require Node.js, npm, React, Maven at runtime, or a Java application server.
+No Node.js or frontend build system is required at runtime.
 
 ---
 
-## 1. Clone
+## 1. Start Jali Frame
+
+Launch the Jali Frame server:
 
 ```bash
-git clone https://github.com/yourname/jali-frame.git
-cd jali-frame
+java -cp target/jali-frame.jar yourpackage.mainServerLaunch
 ```
+
+On startup, Jali Frame opens its launcher/configuration flow.
+
+You will be presented with:
+
+```text
+Y → Launch the configuration GUI
+n → Use the CLI
+s → Silent boot
+```
+
+The launcher is the normal way to configure the framework.
 
 ---
 
-## 2. Configure
+# Configuration Launcher
 
-Create `config.txt` next to the JAR or in the working directory:
+## GUI Mode
+
+Choose:
+
+```text
+Y
+```
+
+to open the configuration GUI.
+
+The GUI lets you configure the application's:
+
+* SQL Server connection
+* Database name
+* Database username
+* Database password
+* HTTP server address
+* HTTP server port
+* Connection pool size
+* Session lifetime
+* Client-side base path
+* HTTP queue/backlog settings
+
+The launcher writes these settings to `config.txt`.
+
+You do **not** need to manually create or edit the configuration file just to get Jali Frame running.
+
+---
+
+## CLI Mode
+
+Choose:
+
+```text
+n
+```
+
+to use the command-line configuration interface.
+
+The CLI provides commands such as:
+
+```text
+launch
+set
+testdb
+```
+
+This allows you to configure and test the environment directly from the terminal.
+
+For example, the launcher can be used to:
+
+```text
+configure → save → test database → launch server
+```
+
+without manually editing configuration files.
+
+---
+
+## Silent Mode
+
+Choose:
+
+```text
+s
+```
+
+for silent startup.
+
+Silent mode skips the interactive configuration process and immediately starts Jali Frame using the existing configuration.
+
+This is intended for environments where the configuration has already been created.
+
+---
+
+# Manual Configuration
+
+`config.txt` can also be edited manually when required.
+
+The file is stored next to the JAR or in the working directory.
+
+A typical configuration looks like:
 
 ```properties
 BASE_FILE_ADDRESS=/absolute/path/to/ClientSide
@@ -328,7 +431,13 @@ queueWaitLine=10
 MAX_SESSION_TIME=86400
 ```
 
-### Configuration
+Manual configuration is useful for automation, deployment scripts, containers, or environments where configuration is managed outside the launcher.
+
+For normal development, the launcher GUI or CLI is the intended workflow.
+
+---
+
+## Configuration Reference
 
 | Key                   | Description                    | Default        |
 | --------------------- | ------------------------------ | -------------- |
@@ -338,47 +447,23 @@ MAX_SESSION_TIME=86400
 | `databaseName`        | Database name                  | `PROJECT_ZERO` |
 | `username`            | SQL username                   | `sa`           |
 | `password`            | SQL password                   | `12`           |
-| `MAX_CONNECTION_POOL` | Maximum DB connections         | `5`            |
+| `MAX_CONNECTION_POOL` | Maximum database connections   | `5`            |
 | `portNumber`          | HTTP server port               | `8080`         |
 | `serverIP`            | HTTP bind address              | `127.0.0.1`    |
 | `queueWaitLine`       | HTTP backlog                   | `10`           |
 | `MAX_SESSION_TIME`    | Session lifetime in seconds    | `86400`        |
 
-> **Security:** change the default credentials before using Jali Frame outside a local development environment.
+The launcher also rebuilds derived URLs and base paths when related configuration values change.
 
-Derived URLs and base paths are recalculated automatically when relevant configuration values change.
-
----
-
-## 3. Boot
-
-```bash
-java -cp target/jali-frame.jar yourpackage.mainServerLaunch
-```
-
-Jali Frame supports three startup modes:
-
-```text
-Y  → launch the configuration GUI
-n  → console mode
-s  → silent boot
-```
-
-Console mode provides commands such as:
-
-```text
-launch
-set
-testdb
-```
+> **Security:** change default development credentials before deploying outside a local development environment.
 
 ---
 
-## 4. Database Initialization
+# First Boot
 
-On first startup Jali Frame can initialize its internal database structures.
+Once configuration is complete, Jali Frame initializes its internal structures.
 
-It creates:
+It creates schemas such as:
 
 ```text
 USERS_DATA_AND_PERMISSIONS
@@ -393,9 +478,11 @@ SYS_OBJECTS
 OBJECT_USER_PERMISSION
 ```
 
-Required authentication and permission stored procedures are installed automatically.
+Authentication and permission stored procedures are installed as part of initialization.
 
-Objects registered during startup are synchronized with the permission matrix during:
+During startup, application objects are registered and synchronized with the permission system.
+
+The registration process is finalized with:
 
 ```java
 DataBaseInit.finalizeRegistration();
@@ -403,11 +490,15 @@ DataBaseInit.finalizeRegistration();
 
 ---
 
-## 5. Open the Application
+# Open the Application
+
+Once the server has started:
 
 ```text
 http://127.0.0.1:8080/
 ```
+
+Log in and begin using the application.
 
 ---
 
@@ -415,7 +506,7 @@ http://127.0.0.1:8080/
 
 Let's build a `Book` page.
 
-## Step 1 — Create the table
+## Step 1 — Create the Table
 
 ```sql
 CREATE TABLE dbo.book (
@@ -429,7 +520,7 @@ CREATE TABLE dbo.book (
 
 ---
 
-## Step 2 — Declare the CRUD operations
+## Step 2 — Declare the CRUD Operations
 
 In `CrudQueriesEnum.java`:
 
@@ -481,7 +572,7 @@ Book(
 
 ---
 
-## Step 3 — Register the file
+## Step 3 — Register the File
 
 In `FilesEnum.java`:
 
@@ -495,7 +586,7 @@ Book(
 
 ---
 
-## Step 4 — Register the page
+## Step 4 — Register the Page
 
 In `WebPagesEnum.java`:
 
@@ -534,7 +625,7 @@ DataBaseInit.finalizeRegistration();
 
 ---
 
-## Step 6 — Build the page
+## Step 6 — Create the HTML
 
 Create:
 
@@ -547,6 +638,7 @@ ClientSide/Books/Book.html
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <title>Books</title>
 
     <script
@@ -577,50 +669,41 @@ ClientSide/Books/Book.html
 </html>
 ```
 
-Rebuild and restart:
-
-```bash
-mvn clean compile
-
-java -cp target/jali-frame.jar yourpackage.mainServerLaunch
-```
-
-Navigate to:
+Restart Jali Frame and navigate to:
 
 ```text
 /book
 ```
 
-You now have a database-backed CRUD page.
+You now have a complete database-backed CRUD page.
 
 ---
 
 # What You Get
 
-That small configuration produces:
+That configuration produces:
 
 ```text
-                    /book
-                      │
-                      ▼
-             <fetch-data-table>
-                      │
-          ┌───────────┼───────────┐
-          ▼           ▼           ▼
-        GET          POST        PUT/DELETE
-          │           │           │
-          └───────────┼───────────┘
-                      ▼
-               Generic API
-                      │
-                Permission
-                   check
-                      │
-                      ▼
-               CrudQueriesEnum
-                      │
-                      ▼
-                 SQL Server
+                         /book
+                           │
+                           ▼
+                  <fetch-data-table>
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+            GET           POST       PUT / DELETE
+             │             │             │
+             └─────────────┼─────────────┘
+                           ▼
+                     Generic API
+                           │
+                     Permission check
+                           │
+                           ▼
+                   CrudQueriesEnum
+                           │
+                           ▼
+                      SQL Server
 ```
 
 The table component provides:
@@ -630,11 +713,11 @@ The table component provides:
 * Create modal
 * Edit modal
 * Delete actions
-* Input validation
+* Validation
 * API integration
 * Permission-aware controls
 
-The framework provides:
+The backend provides:
 
 * HTTP routing
 * Authentication
@@ -642,22 +725,20 @@ The framework provides:
 * JSON handling
 * Parameter binding
 * SQL execution
-* HTML serving
-* Server-side access filtering
+* Static file serving
+* Server-side HTML access filtering
 
 ---
 
 # The Input DSL
 
-Form inputs are declared through the `inputs` attribute.
-
-Each field is a `;;`-terminated block:
+Every form field is represented by a `;;`-terminated block:
 
 ```text
 |name::FIELD|title::LABEL|type::TYPE|value::DEFAULT;;
 ```
 
-For example:
+Example:
 
 ```html
 inputs="
@@ -673,11 +754,11 @@ inputs="
 | `text`            | Text input                  |
 | `number`          | Numeric input               |
 | `password`        | Password input              |
-| `checkbox`        | Boolean value (`1` / `0`)   |
+| `checkbox`        | Boolean input (`1` / `0`)   |
 | `radio`           | Radio group                 |
-| `date-box`        | Custom date picker          |
+| `date-box`        | Custom calendar picker      |
 | `data-combo`      | API-backed dropdown         |
-| `find-object-box` | Searchable modal picker     |
+| `find-object-box` | Searchable object picker    |
 | `map-box`         | Interactive map             |
 | `current-user`    | Hidden logged-in user value |
 
@@ -696,7 +777,7 @@ inputs="
 
 ---
 
-## Map Example
+## Coordinate Example
 
 ```html
 |name::warehouse_lat,warehouse_long
@@ -705,28 +786,26 @@ inputs="
 |value::;;
 ```
 
-The map component writes latitude and longitude into the two specified fields.
-
 ---
 
 # Custom Elements
 
-Jali Frame provides a small library of Web Components.
+Jali Frame provides reusable Web Components loaded as ES modules.
 
-They are loaded as ES modules and require no frontend build pipeline.
+No frontend build system is required.
 
-| Element              | Purpose                   |
-| -------------------- | ------------------------- |
-| `<fetch-data-table>` | Full CRUD data table      |
-| `<data-combo>`       | API-backed dropdown       |
-| `<find-object-box>`  | Searchable object picker  |
-| `<date-box>`         | Calendar/date input       |
-| `<map-box>`          | Interactive map           |
-| `<jali-form>`        | Standalone form component |
+| Element              | Purpose                  |
+| -------------------- | ------------------------ |
+| `<fetch-data-table>` | Full CRUD table          |
+| `<data-combo>`       | API-backed dropdown      |
+| `<find-object-box>`  | Searchable object picker |
+| `<date-box>`         | Calendar/date control    |
+| `<map-box>`          | Interactive map          |
+| `<jali-form>`        | Standalone form          |
 
-All components are designed to work both inside and outside modal dialogs.
+Components are designed to work inside and outside modal dialogs.
 
-Components use Shadow DOM for encapsulated markup and styling where appropriate.
+They encapsulate their own markup and styling using standard browser APIs such as Shadow DOM.
 
 ---
 
@@ -749,7 +828,7 @@ Example:
 </fetch-data-table>
 ```
 
-Useful attributes include:
+Available configuration includes:
 
 ```text
 api
@@ -764,7 +843,7 @@ extra-buttons
 data-AccessCode
 ```
 
-`action-buttons` accepts subsets such as:
+`action-buttons` supports:
 
 ```text
 add
@@ -777,11 +856,9 @@ none
 
 # `<map-box>`
 
-`map-box` has two primary modes.
-
 ## Write Mode
 
-Used to select a location:
+Select a location interactively:
 
 ```html
 <map-box
@@ -791,13 +868,11 @@ Used to select a location:
 </map-box>
 ```
 
-The user selects a coordinate on the map.
-
 ---
 
 ## Read Mode
 
-Used to display an OSRM driving route:
+Display an OSRM route:
 
 ```html
 <map-box
@@ -810,7 +885,7 @@ Used to display an OSRM driving route:
 </map-box>
 ```
 
-The component dispatches:
+The component emits:
 
 ```text
 route-ready
@@ -826,15 +901,13 @@ with:
 }
 ```
 
-Jali Frame bundles Leaflet for offline map rendering.
-
 ---
 
-# Authentication and RBAC
+# Authentication and Permissions
 
 Jali Frame uses an object-code permission model.
 
-Every object can define:
+Each object can define:
 
 ```text
 CAN_READ
@@ -843,7 +916,7 @@ CAN_UPDATE
 CAN_DELETE
 ```
 
-A simplified permission matrix looks like:
+Example:
 
 ```text
 USER_CODE | OBJECT_CODE | CAN_READ | CAN_CREATE | CAN_UPDATE | CAN_DELETE
@@ -853,19 +926,19 @@ USER_CODE | OBJECT_CODE | CAN_READ | CAN_CREATE | CAN_UPDATE | CAN_DELETE
 2         | 102         |    1     |     0      |     0      |     0
 ```
 
-Permissions are enforced at the API level.
+Permissions are enforced by the backend.
 
-That matters because hiding a button in JavaScript is not authorization.
+Hiding a button in JavaScript is not an authorization mechanism.
 
-The server checks the permission before executing the requested operation.
+The API checks the user's permissions before allowing the requested operation.
 
 ---
 
 # Server-Side HTML Trimming
 
-Jali Frame also applies permissions to HTML before the page reaches the browser.
+Jali Frame can also remove unauthorized HTML before the response reaches the browser.
 
-For example:
+Example:
 
 ```html
 <div
@@ -878,50 +951,40 @@ For example:
 </div>
 ```
 
-If the authenticated user does not have `READ` permission for object `101`, the server removes that element before sending the response.
+When the user lacks `READ` permission for object `101`, the server removes that element from the generated HTML response.
 
-This provides:
+The flow becomes:
 
 ```text
-No permission
-      ↓
-Element removed
-      ↓
+Permission check
+       ↓
+Unauthorized element removed
+       ↓
 HTML sent to browser
 ```
 
-rather than:
+This prevents unauthorized UI elements from being delivered to the client.
 
-```text
-HTML sent
-      ↓
-JavaScript hides element
-```
-
-This is a UI access-control mechanism.
-
-It does **not** replace API authorization; the API still enforces permissions independently.
+API authorization still remains the actual security boundary.
 
 ---
 
 # Permission Synchronization
 
-During startup Jali Frame synchronizes registered objects with the permission model.
+During startup, registered objects are synchronized with the permission model.
 
-The initialization process:
+Jali Frame:
 
 1. Inserts new objects into `SYS_OBJECTS`.
 2. Creates missing user/object permission rows.
-3. Grants full permissions to `ADMIN`.
-4. Finalizes the registration phase.
+3. Grants the administrator full permissions.
+4. Finalizes registration.
 
-The final step is:
+The finalization step is:
 
 ```java
 DataBaseInit.finalizeRegistration();
 ```
-
-Forgetting this call means newly registered permissions are not finalized.
 
 ---
 
@@ -992,15 +1055,15 @@ jali-frame/
 
 Jali Frame follows several conventions.
 
-| Convention               | Purpose                               |
-| ------------------------ | ------------------------------------- |
-| `is_deleted BIT`         | Soft-delete convention                |
-| `<table>_id`             | Primary key convention                |
-| `<x>_code` + `<x>_title` | Lookup convention                     |
-| First selected column    | Treated as the row identifier         |
-| `setColumnNames()` order | Determines positional parameter order |
+| Convention                  | Purpose                               |
+| --------------------------- | ------------------------------------- |
+| `is_deleted BIT`            | Soft-delete convention                |
+| `<table>_id`                | Primary key convention                |
+| `<x>_code` + `<x>_title`    | Lookup convention                     |
+| First selected column       | Treated as row identifier             |
+| `setColumnNames(...)` order | Determines positional parameter order |
 
-The default delete builder generates:
+The default delete operation is:
 
 ```sql
 UPDATE table_name
@@ -1008,9 +1071,7 @@ SET is_deleted = 1
 WHERE table_id = ?
 ```
 
-Tables that do not use the standard convention can provide their own delete SQL.
-
-This allows existing databases to be integrated without requiring schema rewrites.
+Applications using existing schemas can provide custom delete SQL when they do not follow the standard convention.
 
 ---
 
@@ -1022,32 +1083,32 @@ Jali Frame is built around Java's standard HTTP server:
 ┌─────────────────────────────────────────────────────────┐
 │                       Browser                           │
 │                                                         │
-│   <fetch-data-table>   <data-combo>   <map-box>        │
-│             │               │             │             │
-│             └───────────────┴─────────────┘             │
-│                             │                           │
+│  <fetch-data-table>  <data-combo>  <map-box>          │
+│            │              │             │               │
+│            └──────────────┴─────────────┘               │
+│                           │                             │
 │                         fetch()                         │
-└─────────────────────────────┼───────────────────────────┘
-                              │
-                              ▼
+└───────────────────────────┼─────────────────────────────┘
+                            │
+                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │              com.sun.net.httpserver.HttpServer         │
 │                                                         │
-│  ┌─────────────────────┐  ┌──────────────────────────┐ │
-│  │ pageHandlerOpener   │  │ apiManagement            │ │
-│  │                     │  │                          │ │
-│  │ • static files      │  │ • GET                    │ │
-│  │ • HTML filtering    │  │ • POST                   │ │
-│  │ • route handling    │  │ • PUT                    │ │
-│  │                     │  │ • DELETE                 │ │
-│  └─────────────────────┘  └──────────────────────────┘ │
+│  ┌────────────────────┐   ┌─────────────────────────┐  │
+│  │ pageHandlerOpener  │   │ apiManagement           │  │
+│  │                    │   │                         │  │
+│  │ • static files     │   │ • GET                   │  │
+│  │ • HTML trimming    │   │ • POST                  │  │
+│  │ • route handling   │   │ • PUT                   │  │
+│  │                    │   │ • DELETE                │  │
+│  └────────────────────┘   └─────────────────────────┘  │
 │                                                         │
 │  ┌───────────────────────────────────────────────────┐  │
 │  │ Enum Layer                                         │  │
 │  │                                                   │  │
-│  │ FilesEnum      → files                            │  │
-│  │ WebPagesEnum   → routes + permissions             │  │
-│  │ CrudQueriesEnum→ SQL + permissions                │  │
+│  │ FilesEnum       → files                           │  │
+│  │ WebPagesEnum    → routes + object codes           │  │
+│  │ CrudQueriesEnum → SQL + permissions               │  │
 │  └───────────────────────────────────────────────────┘  │
 │                                                         │
 │  ┌───────────────────────────────────────────────────┐  │
@@ -1057,27 +1118,23 @@ Jali Frame is built around Java's standard HTTP server:
 │  │ dataBaseUtils   → database helpers               │  │
 │  │ DataBaseInit    → schema + procedures             │  │
 │  └───────────────────────────────────────────────────┘  │
-└─────────────────────────────┼───────────────────────────┘
-                              │
-                              ▼
-                        SQL Server
+└───────────────────────────┼─────────────────────────────┘
+                            │
+                            ▼
+                       SQL Server
 ```
 
-The framework intentionally avoids a heavyweight HTTP runtime.
-
-For internal applications, Jali Frame uses:
+The framework intentionally uses:
 
 ```java
 com.sun.net.httpserver.HttpServer
 ```
 
-instead of an application server such as Tomcat or a networking framework such as Netty.
+to keep the backend small and dependency-light.
 
 ---
 
 # Extending Jali Frame
-
-Jali Frame is designed to be extended without changing its core philosophy.
 
 ## Add a Custom Element
 
@@ -1090,18 +1147,20 @@ ClientSide/FrameWorksLib/Jali.js/custom_elements/yourThing.js
 Then:
 
 1. Extend `HTMLElement`.
-2. Register it with `customElements.define(...)`.
-3. Add it to `FilesEnum`.
-4. Import it in `core.js`.
-5. Use it from any HTML page.
+2. Register the component with `customElements.define(...)`.
+3. Add the required file to `FilesEnum`.
+4. Import it from `core.js`.
+5. Use the element in HTML.
 
 Example:
 
 ```javascript
 class YourThing extends HTMLElement {
+
     connectedCallback() {
         // component initialization
     }
+
 }
 
 customElements.define("your-thing", YourThing);
@@ -1117,7 +1176,7 @@ Extend:
 GenerateGenericSQLQuery
 ```
 
-The existing builders are the reference implementation:
+The existing builders provide the pattern:
 
 ```text
 ReadQuery
@@ -1126,7 +1185,7 @@ CreateQuery
 DeleteQuery
 ```
 
-All generated SQL should use parameterized values.
+Generated SQL should use parameterized values.
 
 ---
 
@@ -1136,29 +1195,29 @@ Jali Frame currently uses cookie-based sessions.
 
 The authentication boundary is intentionally small.
 
-Replace:
+The implementation can be replaced through:
 
 ```text
 webServerUtils.extractTokenFromCookie
 ```
 
-and the authentication stored procedure:
+and the authentication procedure:
 
 ```text
 IS_AUTHENTICATE
 ```
 
-The rest of the framework interacts with authentication through the authentication check rather than depending on the implementation.
+The rest of the framework interacts with authentication through the authentication check.
 
 ---
 
 # Known Limitations
 
-Jali Frame is intentionally small, and that comes with trade-offs.
+Jali Frame intentionally keeps its core small, and that means there are some sharp edges.
 
-## Positional JSON Payloads
+## Positional Payloads
 
-Current payloads use:
+Current requests use:
 
 ```json
 {
@@ -1167,7 +1226,7 @@ Current payloads use:
 }
 ```
 
-The HTML input order must match the SQL column order.
+Changing input order without updating the corresponding query definition can break data binding.
 
 Named fields are planned.
 
@@ -1175,47 +1234,49 @@ Named fields are planned.
 
 ## Lookup Re-hydration
 
-`find-object-box` and `data-combo` currently do not always restore their display value correctly when an existing record is opened for editing.
+`find-object-box` and `data-combo` currently have limitations when restoring their display values during edit operations.
 
-The database value itself is preserved; the issue is visual re-hydration.
+The underlying value is preserved, but the visual display may not always be restored.
 
 ---
 
 ## Two-Phase Boot
 
-Objects are registered during startup and finalized later.
+Application objects are registered and finalized separately.
 
 ```java
 DataBaseInit.finalizeRegistration();
 ```
 
-is required.
+is currently required.
 
-A future release will simplify registration into a single boot phase.
+A single-pass startup flow is planned.
 
 ---
 
-## No JS Build Pipeline
+## No JavaScript Build Pipeline
 
-Jali's JavaScript is loaded directly as ES modules.
+Jali Frame loads ES modules directly.
 
-That means:
+This provides a very small frontend toolchain:
 
-* No npm requirement
-* No bundler required
-* No compilation step
+```text
+HTML
+CSS
+JavaScript
+```
 
-It also means there is currently no built-in tree-shaking or production bundling pipeline.
+with no mandatory bundler or package manager.
 
-An optional esbuild pipeline is planned.
+The trade-off is that there is currently no built-in production bundling or tree-shaking pipeline.
 
 ---
 
 ## No WebSockets
 
-Tables currently refresh through standard HTTP requests.
+Live data synchronization is not currently built in.
 
-There is no built-in real-time synchronization layer.
+Tables refresh through standard HTTP requests.
 
 ---
 
@@ -1227,7 +1288,7 @@ Jali Frame uses:
 com.sun.net.httpserver.HttpServer
 ```
 
-This keeps the framework small and dependency-light, but it is not intended to compete with high-concurrency application stacks for public internet-facing services.
+This keeps the framework lightweight and understandable, but Jali Frame is not designed as a high-concurrency public internet application server.
 
 ---
 
@@ -1238,14 +1299,14 @@ This keeps the framework small and dependency-light, but it is not intended to c
 * [ ] Named request fields
 * [ ] Split overloaded component attributes
 * [ ] Single-pass boot sequence
-* [ ] Reliable component re-hydration on edit
-* [ ] Automatic TypeScript definitions for custom elements
+* [ ] Reliable component re-hydration
+* [ ] Automatic TypeScript definitions
 
 ## v2.1 — Platform
 
 * [ ] Optional esbuild pipeline
 * [ ] WebSocket support
-* [ ] Plugin system for custom HTTP handlers
+* [ ] Plugin system for HTTP handlers
 * [ ] Optional Netty backend
 * [ ] HTTP/2 support
 
@@ -1253,7 +1314,7 @@ This keeps the framework small and dependency-light, but it is not intended to c
 
 * [ ] Jali CLI
 * [ ] `jali new page Warehouse --table warehouse`
-* [ ] HTML generation from enum declarations
+* [ ] Generate HTML from enum definitions
 * [ ] Development mode
 * [ ] Hot reload
 
@@ -1261,17 +1322,15 @@ This keeps the framework small and dependency-light, but it is not intended to c
 
 # Design Philosophy
 
-Jali Frame is built around a few deliberately strong opinions.
-
 ### SQL is not the enemy.
 
-Jali does not try to hide the database behind an ORM abstraction.
+Jali Frame does not attempt to hide SQL behind an ORM.
 
-You define SQL through the framework's query builders and conventions.
+The database remains a first-class part of the application.
 
 ### CRUD should not require boilerplate.
 
-If a screen is fundamentally:
+When a screen is fundamentally:
 
 ```text
 SELECT
@@ -1280,62 +1339,58 @@ UPDATE
 DELETE
 ```
 
-you should not need hundreds of lines of application plumbing to expose it.
+the HTTP and UI plumbing should not overwhelm the actual business logic.
 
-### The browser is already a platform.
+### The browser already provides a frontend platform.
 
-Modern browsers already provide:
+Modern browsers already support:
 
 * Custom Elements
 * ES Modules
 * Shadow DOM
 * Fetch
-* HTML forms
+* HTML
 * CSS
 
-Jali uses those primitives directly instead of introducing a mandatory frontend framework.
+Jali Frame builds directly on those capabilities.
 
 ### Authorization belongs on the server.
 
-UI visibility is useful.
+A hidden button is not security.
 
-It is not authorization.
+Jali checks permissions at the API boundary and can additionally remove unauthorized HTML before delivery.
 
-Jali therefore enforces permissions at the API boundary and can additionally trim inaccessible HTML before it reaches the browser.
-
-### Small systems are easier to understand.
+### Keep the framework understandable.
 
 Jali Frame intentionally has a limited surface area.
 
-There is no dependency mountain to climb before understanding what the framework is doing.
+There is no giant abstraction stack hiding what happens between the browser and SQL Server.
 
 ---
 
 # Who Is Jali Frame For?
 
-Jali Frame is particularly suited to:
+Jali Frame is intended for developers building:
 
 * Internal enterprise applications
+* ERP systems
 * Inventory systems
-* ERP modules
-* Administrative panels
-* Management software
+* Administrative tools
+* Database-backed management software
 * CRUD-heavy business applications
-* Database-first systems
-* Small teams that want a compact Java stack
+* Small-team Java applications
+* Database-first applications
 
-It is less appropriate when you need:
+It is less suited to projects that require:
 
-* A public-scale distributed backend
-* Massive concurrent connections
-* A large frontend ecosystem
+* Very high connection counts
+* Large distributed systems
+* A large frontend framework ecosystem
 * Advanced reactive infrastructure
-* Vendor-independent database abstraction
+* Database-vendor independence
 * A full enterprise framework ecosystem
 
-Jali Frame does not try to solve every web development problem.
-
-It solves a narrower one:
+Jali Frame deliberately solves a narrower problem:
 
 > **How much code should it take to turn a SQL-backed business object into a usable web application?**
 
@@ -1343,7 +1398,7 @@ It solves a narrower one:
 
 # Project Philosophy in One Example
 
-A conventional implementation might require:
+A conventional CRUD feature might involve:
 
 ```text
 Controller
@@ -1353,7 +1408,7 @@ Entity
 DTO
 Mapper
 REST endpoint
-Frontend API code
+Frontend API layer
 Frontend table
 Frontend form
 Permission checks
@@ -1369,7 +1424,7 @@ FilesEnum
 HTML
 ```
 
-The framework takes care of the repetitive plumbing between them.
+The framework fills in the repetitive plumbing.
 
 ---
 
@@ -1377,13 +1432,13 @@ The framework takes care of the repetitive plumbing between them.
 
 Issues and pull requests are welcome.
 
-When contributing, please keep the framework's core principles intact:
+Please preserve the framework's core principles:
 
 * Keep the core dependency-light.
 * Keep custom elements usable inside and outside modals.
 * Keep SQL builders parameterized.
 * Document breaking changes.
-* Avoid adding abstractions that exist only to solve problems the framework does not have.
+* Avoid abstractions that add complexity without solving a real Jali Frame problem.
 
 ---
 
